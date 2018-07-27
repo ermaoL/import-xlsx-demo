@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>import execel</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+ 
+	<style type="text/css">
+	.Color1{
+		background-color:#99CCCC;
+	}
+	.Color2{
+		background-color:#C3DDE0;
+	}
+	</style>
+ 
+	<script type="text/javascript">
+		//隔行换色
+		function setTableLine(id){
+			if(document.getElementsByTagName){  
+				var table = document.getElementById(id);  
+				var rows = table.getElementsByTagName("tr"); 
+				 
+				for(i = 0; i < rows.length; i++){          
+					if(i % 2 == 0){
+						rows[i].className = "Color2";
+					}else{
+						rows[i].className = "Color1";
+					}      
+				}
+			}
+		}
+ 
+		//查看
+		function Button0_onclick(){
+			var filePostfix = document.getElementById('fileAddress').value.split('.')
+			if(filePostfix[filePostfix.length - 1] =="xlsx" || filePostfix[filePostfix.length - 1]=="xls"){
+				getvl() ;
+				document.getElementById('fileAddress').value = "" ;
+			}else if(document.getElementById('fileAddress').value == "" ){
+				alert("请选择excel文件！");
+			}
+			else{
+				alert("只能操作excel文档！") ;
+			}
+		}
+		//获取文件本地物理路径并读取
+		function readExcel(filePath) {
+			var html_code;
+			//得到文件路径的值
+			var filePath = filePath ;
+			var oXL = new ActiveXObject("Excel.Application");
+			var oWB = oXL.Workbooks.open(filePath);
+			var oSheet = oWB.ActiveSheet;
+			var colcount=oWB.Worksheets(1).UsedRange.Cells.Rows.Count;
+			var colcolumn=oWB.Worksheets(1).UsedRange.Columns.Count;
+			var i = 1;
+			var beginI = i;
+			html_code = "";
+			html_code += "<center><table id='excelTable' style='border:1px solid black'>";
+			while(i<=colcount) {
+				var havaValue = oSheet.Cells(i, 1).value;
+				if(""!=havaValue && null!=havaValue && undefined!=havaValue) {
+					html_code += "<tr>";
+					//excel中的标题，读入时忽略
+					if(i == beginI) {
+						for(var j=0; j<=colcolumn; j++) {
+							if(j==0) {
+								html_code += "<td height=10><div align=center><strong>"+i+"</strong></div></td>";
+							} else {
+								var cellValue = oSheet.Cells(i, j).value;
+								if(undefined!=cellValue) {
+									html_code += "<td height=10><div align=center><strong>"+cellValue+"</strong></div></td>";
+								} else {
+									html_code += "<td height=10><div align=center><strong></strong></div></td>";
+								}
+							}
+						}
+					} else { //标题下的数据，逐行导入
+						for(var j=0; j<=colcolumn; j++) {
+							if(j==0) {
+								html_code += "<td height=10><div align=center><strong>"+i+"</strong></div></td>";
+							} else {
+								var cellValue = oSheet.Cells(i, j).value;
+								if(undefined!=cellValue) {
+									if(typeof cellValue == 'date'){
+										var longDate = " " +cellValue + " " ;
+										//getSmpFormatDateByLong(trim(longDate).valueOf(),false)
+										html_code += "<td height=10><div align=center>"+longDate+"</div></td>";
+									}else{
+										html_code += "<td height=10><div align=center>"+cellValue+"</div></td>";
+									}
+								} else {
+									html_code += "<td height=10><div align=center></div></td>" ;
+								}
+							}
+						}
+					}
+					html_code += "</tr>";
+				} else {
+					//alert("excel文件显示结束");
+					break;
+				}
+				i++;
+			}
+			html_code += "</table>";
+			document.getElementById("excelValue").innerHTML=html_code;
+ 
+			//关闭
+			oWB.Close(savechanges=false);
+ 
+			//设置table换行变色
+			setTableLine('excelTable');
+		}
+ 
+		function getFileAddr(){
+			var fileAddress = document.getElementById('fileAddress');
+			if(fileAddress.value.split('.')[1] =='xlsx' || fileAddress.value.split('.')[1] == 'xls'){
+				alert(fileAddress.value);
+			}else{
+				alert("请选择excel文件！");
+				fileAddress.value = "" ;
+			}
+		}
+		
+		/*
+		---------------------------------获取file控件的真实路径----------------------------------
+		*/
+		//FX获取文件路径方法
+		function readFileFirefox(fileBrowser) {
+			try {
+				netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+			} catch (e) {
+				alert('无法访问本地文件，由于浏览器安全设置。为了克服这一点，请按照下列步骤操作：(1)在地址栏输入"about:config";(2) 右键点击并选择 New->Boolean; (3) 输入"signed.applets.codebase_principal_support" （不含引号）作为一个新的首选项的名称;(4) 点击OK并试着重新加载文件');
+				return;
+			}
+			var fileName=fileBrowser.value; //这一步就能得到客户端完整路径。下面的是否判断的太复杂，还有下面得到ie的也很复杂。
+			var file = Components.classes["@mozilla.org/file/local;1"]
+			           .createInstance(Components.interfaces.nsILocalFile);
+			try {
+		// Back slashes for windows
+				file.initWithPath( fileName.replace(/\//g, "\\\\") );
+			} catch(e) {
+				if (e.result!=Components.results.NS_ERROR_FILE_UNRECOGNIZED_PATH) throw e;
+				alert("File '" + fileName + "' cannot be loaded: relative paths are not allowed. Please provide an absolute path to this file.");
+				return;
+			}
+			if ( file.exists() == false ) {
+				alert("File '" + fileName + "' not found.");
+				return;
+			}
+			return file.path;
+		}
+		//根据不同浏览器获取路径
+		function getvl() {
+		//判断浏览器
+			var Sys = {};
+			var ua = navigator.userAgent.toLowerCase();
+			var s;
+			(s = ua.match(/msie ([\d.]+)/)) ? Sys.ie = s[1] :
+			        (s = ua.match(/firefox\/([\d.]+)/)) ? Sys.firefox = s[1] :
+			                (s = ua.match(/chrome\/([\d.]+)/)) ? Sys.chrome = s[1] :
+			                        (s = ua.match(/opera.([\d.]+)/)) ? Sys.opera = s[1] :
+			                                (s = ua.match(/version\/([\d.]+).*safari/)) ? Sys.safari = s[1] : 0;
+			var file_url="";
+			if(Sys.ie<="6.0") {
+		//ie5.5,ie6.0
+				file_url = document.getElementById("fileAddress").value;
+			} else if(Sys.ie>="7.0") {
+		//ie7,ie8
+				var file = document.getElementById("fileAddress");
+				file.select();
+				file_url = document.selection.createRange().text;
+			} else if(Sys.firefox) {
+		//fx
+		//file_url = document.getElementById("file").files[0].getAsDataURL();//获取的路径为FF识别的加密字符串
+				file_url = readFileFirefox(document.getElementById("fileAddress"));
+			}
+			//调用方法，将excel中的数据传入grid中
+			readExcel(file_url) ;
+			document.getElementById("excelPath").innerHTML="获取文件域完整路径为："+file_url;
+		}
+	    
+	</script>
+</head>
+<body>
+	<div id="excelChoose"  style="position:absolute;top:375px;left:500px;"></div>
+	<input  id="fileAddress" name="fileAddr" type="file"/>
+	
+	<input type="button" id="button0" onclick="Button0_onclick()" value="导入Excel数据到表格"></input>
+	<div id="excelPath" ></div>
+	<br/>
+	<div id="excelValue" ></div>
+</body>
+</html>

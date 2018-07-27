@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <input type="file" id="testFile" name="testFile1">
+  <div id="testDiv">123</div>
+  <button onclick="getFile()">获取</button>
+  <script src="https://cdn.bootcss.com/jquery/1.12.0/jquery.min.js"></script>
+  <script>
+    function getFile () {
+      $('#testDiv').data('greeting', '123')
+      var fs = $('#testFile').data('file')
+      console.log(fs)
+    }
+  </script>
+</body>
+</html>
